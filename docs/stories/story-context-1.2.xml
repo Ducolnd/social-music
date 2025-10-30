@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<storyContext id="bmad/bmm/workflows/4-implementation/story-context" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>2</storyId>
+    <title>TikTok Integration + SoundCloud Integration + Video Generation</title>
+    <status>Draft</status>
+    <generatedAt>2025-01-27</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/story-social-music-foundation-2.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>music producer</asA>
+    <iWant>to connect my TikTok and SoundCloud accounts, fetch my tracks, and generate videos automatically</iWant>
+    <soThat>I can create and post social media content without manual video editing</soThat>
+    
+    <tasks>
+      <task>Create database migration for tiktok_accounts table (AC: 1)</task>
+      <task>Create lib/tiktok/login-kit.ts - TikTok Login Kit integration (AC: 2)</task>
+      <task>Create lib/tiktok/content-kit.ts - TikTok Content Kit integration (AC: 3)</task>
+      <task>Create lib/tiktok/client.ts - Reusable TikTok API client library (AC: 6)</task>
+      <task>Create app/api/auth/tiktok/callback/route.ts for Login Kit callback (AC: 4)</task>
+      <task>Create app/api/auth/tiktok/initiate/route.ts for Login Kit initiation (AC: 4)</task>
+      <task>Create app/api/tiktok/post/route.ts for video posting via Content Kit (AC: 16)</task>
+      <task>Add TikTok connection UI to dashboard (AC: 4, 7)</task>
+      <task>Implement connection status verification (AC: 7)</task>
+      <task>Create database migration for soundcloud_accounts table (AC: 8)</task>
+      <task>Create app/api/auth/soundcloud/callback/route.ts for OAuth callback (AC: 10)</task>
+      <task>Create app/api/auth/soundcloud/initiate/route.ts for OAuth initiation (AC: 9)</task>
+      <task>Create app/api/soundcloud/tracks/route.ts for track fetching (AC: 11, 12)</task>
+      <task>Add SoundCloud connection UI to dashboard (AC: 9)</task>
+      <task>Display tracks with metadata in UI (AC: 12)</task>
+      <task>Create app/api/video/generate/route.ts for n8n webhook integration (AC: 14)</task>
+      <task>Update app/dashboard/video-generation/page.tsx with connection and track selection UI</task>
+      <task>Add "Generate Video" button functionality (AC: 13, 14)</task>
+      <task>Create API route to fetch generated videos (AC: 15)</task>
+      <task>Update dashboard to display generated videos (AC: 15)</task>
+      <task>Add "Post to TikTok" functionality (AC: 16)</task>
+      <task>Display posting status for videos (AC: 17)</task>
+      <task>Implement error handling for API failures (AC: 18)</task>
+      <task>Add loading states during async operations (AC: 19)</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">TikTok accounts table is created in database</criterion>
+    <criterion id="2">TikTok Login Kit integration is implemented (authentication flow)</criterion>
+    <criterion id="3">TikTok Content Kit integration is implemented (video posting capability)</criterion>
+    <criterion id="4">Users can connect their TikTok account via Login Kit</criterion>
+    <criterion id="5">Access tokens are stored securely in database</criterion>
+    <criterion id="6">TikTok integration library/utility is created for reusable API calls</criterion>
+    <criterion id="7">Users can verify TikTok connection status in dashboard</criterion>
+    <criterion id="8">SoundCloud accounts table is created in database</criterion>
+    <criterion id="9">Users can initiate SoundCloud OAuth flow</criterion>
+    <criterion id="10">OAuth callback stores access tokens securely</criterion>
+    <criterion id="11">Users can fetch their tracks from SoundCloud</criterion>
+    <criterion id="12">Tracks are displayed in dashboard with metadata</criterion>
+    <criterion id="13">Users can select a track for video generation</criterion>
+    <criterion id="14">Video generation triggers n8n webhook with required data</criterion>
+    <criterion id="15">Generated videos are displayed in dashboard</criterion>
+    <criterion id="16">Users can post generated videos to TikTok via Content Kit</criterion>
+    <criterion id="17">Posting status is tracked and displayed</criterion>
+    <criterion id="18">Error handling works for API failures</criterion>
+    <criterion id="19">Loading states are shown during async operations</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc 
+        path="docs/product-brief-social-music-2025-01-27.md"
+        title="Product Brief: Social Music"
+        section="MVP Scope - Core Features"
+        snippet="Simple Dashboard: View all posts, Track posting status, View generated content. Rationale: User needs visibility into their content."
+      />
+      <doc 
+        path="docs/tech-spec-social-music-backbone.md"
+        title="Technical Specification"
+        section="Story 2: SoundCloud Integration + Video Generation"
+        snippet="Implement TikTok Login Kit and Content Kit integration, SoundCloud OAuth integration, track fetching, and n8n webhook integration for video generation and posting. Users should be able to connect accounts, fetch tracks, generate videos, and post to TikTok."
+      />
+      <doc 
+        path="docs/tech-spec-social-music-backbone.md"
+        title="Technical Specification"
+        section="Technical Details - Story 2"
+        snippet="Database Schema: CREATE TABLE soundcloud_accounts (id UUID PRIMARY KEY, user_id UUID REFERENCES auth.users, soundcloud_user_id TEXT, access_token TEXT, refresh_token TEXT, username TEXT, profile_url TEXT). TikTok accounts table similar structure expected."
+      />
+      <doc 
+        path="docs/tech-spec-social-music-backbone.md"
+        title="Technical Specification"
+        section="Implementation Stack"
+        snippet="Frontend: Next.js 14.2.0 (App Router), React 18. GUI, TypeScript 5.3.3, Tailwind CSS 3.4.1. Backend: Supabase Auth (existing), Supabase PostgreSQL 15.1, Supabase JavaScript Client 2.39.3. External: SoundCloud API (OAuth + track fetching), TikTok API (Login Kit + Content Kit), n8n automation, Unsplash API."
+      />
+      <doc 
+        path="docs/tech-spec-social-music-backbone.md"
+        title="Technical Specification"
+        section="Implementation Guide - Phase 2"
+        snippet="Step 1: Create Database Migration for soundcloud_accounts and tiktok_accounts tables. Step 2: Implement SoundCloud OAuth and TikTok Login Kit. Step 3: Create Track Fetching API. Step 4: Create n8n Webhook Integration. Step 5: Build Video Generation UI. Step 6: Display Generated Videos."
+      />
+      <doc 
+        path="docs/tech-spec-social-music-backbone.md"
+        title="Technical Specification"
+        section="Environment Variables"
+        snippet="New variables: SOUNDCLOUD_CLIENT_ID, SOUNDCLOUD_CLIENT_SECRET, TIKTOK_CLIENT_ID, TIKTOK_CLIENT_SECRET, N8N_WEBHOOK_URL, UNSPLASH_ACCESS_KEY. Store tokens securely in database with encryption."
+      />
+      <doc 
+        path="docs/ux-design-standard-social-music.md"
+        title="UX Design Standard"
+        section="Component Design - Buttons"
+        snippet="Primary Button: background: linear-gradient(135deg, #8B5CF6, #3B82F6), color: white, padding: 12px 24px, border-radius: 8px, font-weight: 600, box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3)"
+      />
+      <doc 
+        path="docs/ux-design-standard-social-music.md"
+        title="UX Design Standard"
+        section="Music-Specific Components - Video Generation Status"
+        snippet="Processing: background #FEF3C7, color #92400E. Complete: background #D1FAE5, color #065F46. Error: background #FEE2E2, color #991B1 genders: #991B1B"
+      />
+      <doc 
+        path="docs/ux-design-standard-social-music.md"
+        title="UX Design Standard"
+        section="Responsive Design"
+        snippet="Mobile: max-width 767px. Tablet: 768-1023px. Desktop: min-width 1024px. Buttons full-width on mobile, cards stacked, reduced padding."
+      />
+      <doc 
+        path="docs/epics-social-music.md"
+        title="Epics and Stories"
+        section="Epic 1: Social Music Foundation"
+        snippet="Story 2: TikTok/SoundCloud Integration + Video Generation - Implement SoundCloud OAuth, track fetching, TikTok Login Kit and Content Kit, n8n webhook integration, video display in dashboard. Story points: 8. Timeline: 8-10 days."
+      />
+      <doc 
+        path="docs/stories/story-social-music-foundation-2.md"
+        title="Story 2: TikTok Integration + SoundCloud Integration + Video Generation"
+        section="Dev Notes"
+        snippet="Implement TikTok Login Kit and Content Kit integration, SoundCloud OAuth integration, track fetching, and n8n webhook integration. Users should be able to connect accounts, fetch tracks, generate videos via n8n, post to TikTok, and track posting status."
+      />
+      <doc 
+        path="docs/stories/story-social-music-foundation-2.md"
+        title="Story 2"
+        section="References"
+        snippet="External APIs: TikTok API (Login Kit + Content Kit) https://developers.tiktok.com/doc/tiktok-login-kit-getting-started, SoundCloud API https://developers.soundcloud.com/, n8n webhook for video generation, Unsplash API for background images. Library Pattern: Create reusable TikTok integration library for maintainable API interactions."
+      />
+    </docs>
+
+    <code>
+      <file 
+        path="lib/supabase/server.ts" 
+        kind="utility"
+        symbol="createClient"
+        lines="9-34"
+        reason="Server-side Supabase client for authenticated database operations when storing TikTok and SoundCloud tokens"
+      />
+      <file 
+        path="lib/supabase/middleware.ts" 
+        kind="middleware"
+        symbol="updateSession"
+        lines="5-76"
+        reason="Existing session management for OAuth callbacks that will handle TikTok and SoundCloud authentication flow redirects"
+      />
+      <file 
+        path="middleware.ts" 
+        kind="middleware"
+        symbol="middleware"
+        lines="1-20"
+        reason="Route protection middleware that will need to allow access to OAuth callback routes for TikTok and SoundCloud"
+      />
+      <file 
+        path="app/dashboard/video-generation/page.tsx" 
+        kind="page"
+        symbol="VideoGenerationPage"
+        lines="1-43"
+        reason="Existing placeholder page that needs to be enhanced with TikTok/SoundCloud connection UI, track selection, and video generation functionality"
+      />
+      <file 
+        path="app/dashboard/page.tsx" 
+        kind="page"
+        symbol="DashboardPage"
+        lines="1-50"
+        reason="Dashboard home page that needs to display generated videos and posting status"
+      />
+      <file 
+        path="components/ui/button.tsx" 
+        kind="component"
+        symbol="Button"
+        lines="1-50"
+        reason="shadcn/ui button component to use for all CTAs and action buttons (connect account, generate video, post to TikTok)"
+      />
+      <file 
+        path="components/ui/card.tsx" 
+        kind="component"
+        symbol="Card"
+        lines="1-30"
+        reason="shadcn/ui card component to display tracks, generated videos, and connection status"
+      />
+      <file 
+        path="components/ui/badge.tsx" 
+        kind="component"
+        symbol="Badge"
+        lines="1-20"
+        reason="shadcn/ui badge component to display connection status, video generation status, and posting status"
+      />
+      <file 
+        path="lib/utils.ts" 
+        kind="utility"
+        symbol="cn"
+        lines="1-10"
+        reason="Utility for merging Tailwind classes with clsx and tailwind-merge for conditional styling"
+      />
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="next" version="latest" />
+        <package name="react" version="19.0.0" />
+        <package name="react-dom" version="19.0.0" />
+        <package name="@supabase/supabase-js" version="latest" />
+        <package name="@supabase/ssr" version="latest" />
+        <package name="tailwindcss" version="3.4.1" />
+        <package name="lucide-react" version="0.511.0" />
+        <package name="@radix-ui/react-dropdown-menu" version="2.1.14" />
+        <package name="next-themes" version="0.4.6" />
+        <package name="class-variance-authority" version="0.7.1" />
+        <package name="clsx" version="2.1.1" />
+        <package name="tailwind-merge" version="3.3.0" />
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface 
+      name="TikTok Login Kit"
+      kind="OAuth authentication API"
+      signature="GET /oauth/authorize, POST /oauth/access_token"
+      path="external - https://developers.tiktok.com/doc/tiktok-login-kit-getting-started"
+    />
+    <interface 
+      name="TikTok Content Kit"
+      kind="Video posting API"
+      signature="POST /api/v1/content/post"
+      path="external - https://developers.tiktok.com/doc/tiktok-content-kit-getting-started"
+    />
+    <interface 
+      name="SoundCloud OAuth"
+      kind="OAuth authentication API"
+      signature="GET /connect, POST /oauth2/token"
+      path="external - https://developers.soundcloud.com/docs/api/guide"
+    />
+    <interface 
+      name="SoundCloud API"
+      kind="Track fetching API"
+      signature="GET /me/tracks"
+      path="external - https://developers.soundcloud.com/docs/api/reference"
+    />
+    <interface 
+      name="n8n Webhook"
+      kind="HTTP webhook endpoint"
+      signature="POST /webhook/video-generate"
+      path="external - n8n automation platform webhook URL"
+    />
+    <interface 
+      name="Unsplash API"
+      kind="Image fetching API"
+      signature="GET /search/photos"
+      path="external - https://unsplash.com/documentation"
+    />
+    <interface 
+      name="Supabase Database"
+      kind="PostgreSQL database"
+      signature="Supabase client methods for table operations"
+      path="lib/supabase/server.ts"
+    />
+  </interfaces>
+
+  <constraints>
+    <constraint>Store all OAuth access tokens securely in database with encryption. Never expose tokens to client-side code.</constraint>
+    <constraint>Use Next.js 14 App Router with API routes pattern for OAuth callbacks and webhook integrations</constraint>
+    <constraint>Implement proper error handling for all external API calls (TikTok, SoundCloud, n8n, Unsplash)</constraint>
+    <constraint>Display loading states during all async operations (token fetch, track fetching, video generation, posting)</constraint>
+    <constraint>Follow UX design standard: purple/blue gradient buttons, card-based layouts, responsive design</constraint>
+    <constraint>Create reusable TikTok integration library (lib/tiktok/client.ts) for all TikTok API interactions</constraint>
+    <constraint>Use TypeScript for all files with proper type safety and error handling</constraint>
+    <constraint>Implement rate limiting and error retry logic for external API calls</constraint>
+    <constraint>All database migrations must be idempotent and include rollback capability</constraint>
+    <constraint>Use Supabase Row Level Security (RLS) to protect user data and tokens</constraint>
+    <constraint>Follow OAuth 2.0 best practices for state validation and CSRF protection</constraint>
+    <constraint>Use environment variables for all API keys and secrets, never hardcode</constraint>
+  </constraints>
+
+  <tests>
+    <standards>
+      Testing approach: Use Jest for unit tests, React Testing Library for component tests, and manual testing for OAuth flows. Focus on API integration tests for TikTok and SoundCloud, webhook triggering for n8n, error handling, and loading states. No E2E tests required for this story due to OAuth complexity, but manual testing of full flow is recommended.
+    </standards>
+    
+    <locations>
+      <location>__tests__/api/ (for API route tests)</location>
+      <location>__tests__/lib/tiktok/ (for TikTok integration library tests)</location>
+      <location>__tests__/app/ (for page component tests)</location>
+      <location>Manual testing for OAuth flows</location>
+    </locations>
+    
+    <ideas>
+      <idea ac="1">Test that tiktok_accounts table is created with correct schema (user_id, access_token, refresh_token, etc.)</idea>
+      <idea ac="2">Test that TikTok Login Kit integration initiates OAuth flow correctly with proper redirect URL</idea>
+      <idea ac="3">Test that TikTok Content Kit integration can post videos to TikTok via API</idea>
+      <idea ac="4">Test that users can click "Connect TikTok" button and complete authentication flow</idea>
+      <idea ac="5">Test that access tokens are stored in database after successful OAuth callback</idea>
+      <idea ac="6">Test that TikTok client library has reusable methods for API calls (login, post, etc.)</idea>
+      <idea ac="7">Test that TikTok connection status displays correctly in dashboard (connected/disconnected)</idea>
+      <idea ac="8">Test that soundcloud_accounts table is created with correct schema</idea>
+      <idea ac="9">Test that SoundCloud OAuth flow initiates correctly with proper redirect</idea>
+      <idea ac="10">Test that OAuth callback stores SoundCloud tokens securely in database</idea>
+      <idea ac="11">Test that tracks are fetched from SoundCloud API correctly with valid token</idea>
+      <idea ac="12">Test that tracks are displayed in dashboard with metadata (title, artist, duration, etc.)</idea>
+      <idea ac="13">Test that users can select a track from the list for video generation</idea>
+      <idea ac="14">Test that video generation triggers n8n webhook with required data (track URL, image, caption)</idea>
+      <idea ac="15">Test that generated videos are fetched and displayed in dashboard after generation</idea>
+      <idea ac="16">Test that users can post generated videos to TikTok via Content Kit</idea>
+      <idea ac="17">Test that posting status is tracked and displayed (processing, complete, error)</idea>
+      <idea ac="18">Test error handling for API failures (network errors, invalid tokens, rate limiting)</idea>
+      <idea ac="19">Test that loading states are shown during async operations (spinner, disabled buttons, etc.)</idea>
+    </ideas>
+  </tests>
+
+</storyContext>
+
