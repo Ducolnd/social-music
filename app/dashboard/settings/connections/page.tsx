@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ interface ConnectionStatus {
   [key: string]: SocialConnection | null;
 }
 
-export default function ConnectionsSettingsPage() {
+function ConnectionsSettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [connections, setConnections] = useState<ConnectionStatus>({});
@@ -397,5 +397,19 @@ export default function ConnectionsSettingsPage() {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+export default function ConnectionsSettingsPage() {
+  return (
+    <Suspense fallback={
+      <Card>
+        <CardContent>
+          <div className="text-center py-8 text-slate-500">Loading connections...</div>
+        </CardContent>
+      </Card>
+    }>
+      <ConnectionsSettingsContent />
+    </Suspense>
   );
 }
