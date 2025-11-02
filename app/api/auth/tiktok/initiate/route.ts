@@ -32,7 +32,7 @@ export async function GET() {
 
     // Build authorization URL
     const { url } = buildAuthorizationUrl(config, state, {
-      // disable_auto_auth: '0', // TikTok specific: skip auth page for valid sessions
+      disable_auto_auth: '1', // TikTok specific: skip auth page for valid sessions
     });
 
     // Redirect to TikTok authorization page

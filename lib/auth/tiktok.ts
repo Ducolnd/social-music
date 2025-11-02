@@ -21,6 +21,7 @@ export const TIKTOK_SCOPES = {
   VIDEO_LIST: 'video.list',
   VIDEO_UPLOAD: 'video.upload',
   VIDEO_DELETE: 'video.delete',
+  VIDEO_PUBLISH: 'video.publish',
   
   // Comment scopes
   COMMENT_LIST: 'comment.list',
@@ -47,7 +48,7 @@ export function getTikTokOAuthConfig(): OAuthConfig {
     clientKey: clientId,
     clientSecret,
     redirectUri,
-    scopes: [TIKTOK_SCOPES.USER_INFO_BASIC, TIKTOK_SCOPES.VIDEO_UPLOAD],
+    scopes: [TIKTOK_SCOPES.USER_INFO_BASIC, TIKTOK_SCOPES.VIDEO_UPLOAD, TIKTOK_SCOPES.VIDEO_PUBLISH],
     authorizationUrl: 'https://www.tiktok.com/v2/auth/authorize/',
     tokenUrl: 'https://open.tiktokapis.com/v2/oauth/token/',
   };

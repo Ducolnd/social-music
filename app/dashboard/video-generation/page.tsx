@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +8,7 @@ import { searchPexelsPhotos } from '@/lib/api/pexels';
 import { generateGeminiCaptions } from '@/lib/api/gemini';
 import type { Photo } from 'pexels';
 import type { FinalVariant } from '@/lib/types/post-generation';
-import { Check, CheckCircle2, Loader2, Search, Sparkles } from 'lucide-react';
+import { Check, CheckCircle2, Loader2, Search, Sparkles, AlertCircle } from 'lucide-react';
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -26,6 +26,12 @@ interface PostGenerationState {
   selectedCaptions: string[];
   finalVariants: FinalVariant[];
   selectedVariants: string[];
+  // Connection status
+  connections: Record<string, boolean>;
+  isLoadingConnections: boolean;
+  // Posting state
+  isPosting: Record<string, boolean>;
+  postingError: string | null;
 }
 
 // Mock user context - in the future this will come from settings
@@ -46,7 +52,47 @@ export default function PostGenerationPage() {
     selectedCaptions: [],
     finalVariants: [],
     selectedVariants: [],
+    connections: {},
+    isLoadingConnections: false,
+    isPosting: {},
+    postingError: null,
   });
+
+  const checkConnections = async () => {
+    setState((prev) => ({ ...prev, isLoadingConnections: true }));
+    try {
+      const response = await fetch('/api/connections');
+      if (!response.ok) {
+        throw new Error('Failed to check connections');
+      }
+      const data = await response.json();
+      // Transform connection objects to boolean status
+      const connections: Record<string, boolean> = {};
+      (['tiktok', 'instagram', 'youtube'] as const).forEach((platform) => {
+        connections[platform] = data.connections[platform] !== null;
+      });
+      setState((prev) => ({
+        ...prev,
+        connections,
+        isLoadingConnections: false,
+      }));
+    } catch (error) {
+      console.error('Error checking connections:', error);
+      setState((prev) => ({
+        ...prev,
+        isLoadingConnections: false,
+        postingError: 'Failed to check connected accounts',
+      }));
+    }
+  };
+
+  // Check connected accounts when reaching step 6
+  useEffect(() => {
+    if (state.step === 6) {
+      checkConnections();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.step]);
 
   // Step 1: Generate initial caption options (mock)
   const handleGenerateInitialCaptions = () => {
@@ -165,10 +211,92 @@ export default function PostGenerationPage() {
     });
   };
 
-  const handlePostToTikTok = () => {
-    // TODO: Implement actual TikTok posting
-    console.log('Posting to TikTok:', state.selectedVariants);
-    setState((prev) => ({ ...prev, step: 7 }));
+  const handlePostToPlatform = async (platform: 'tiktok' | 'instagram' | 'youtube') => {
+    // Check if platform is connected
+    if (!state.connections[platform]) {
+      setState((prev) => ({
+        ...prev,
+        postingError: `${platform.charAt(0).toUpperCase() + platform.slice(1)} account not connected. Please connect your account in settings first.`,
+      }));
+      return;
+    }
+
+    if (state.selectedVariants.length === 0) {
+      setState((prev) => ({
+        ...prev,
+        postingError: 'Please select at least one variant to post',
+      }));
+      return;
+    }
+
+    // Set posting state
+    setState((prev) => ({
+      ...prev,
+      isPosting: { ...prev.isPosting, [platform]: true },
+      postingError: null,
+    }));
+
+    try {
+      // Post each selected variant
+      const posts = state.selectedVariants.map((variantId) => {
+        const variant = state.finalVariants.find((v) => v.id === variantId);
+        if (!variant) return null;
+
+        // Use the large image URL for better quality
+        const imageUrl = variant.image.src.large || variant.image.src.medium;
+
+        if (platform === 'tiktok') {
+          return fetch('/api/posts/tiktok', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              imageUrl,
+              caption: variant.caption,
+            }),
+          });
+        } else if (platform === 'instagram') {
+          // TODO: Implement Instagram posting API
+          return Promise.resolve({
+            ok: false,
+            json: () => Promise.resolve({ error: 'Instagram posting not yet implemented' }),
+          });
+        } else if (platform === 'youtube') {
+          // TODO: Implement YouTube posting API
+          return Promise.resolve({
+            ok: false,
+            json: () => Promise.resolve({ error: 'YouTube posting not yet implemented' }),
+          });
+        }
+        return null;
+      });
+
+      // Wait for all posts to complete
+      const results = await Promise.all(posts.filter(Boolean));
+      const errors = results.filter((r) => !r?.ok);
+
+      if (errors.length > 0) {
+        const errorData = await errors[0]?.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `Failed to post to ${platform}. Please try again.`
+        );
+      }
+
+      // Success - move to step 7
+      setState((prev) => ({
+        ...prev,
+        step: 7,
+        isPosting: { ...prev.isPosting, [platform]: false },
+      }));
+    } catch (error) {
+      console.error(`Error posting to ${platform}:`, error);
+      setState((prev) => ({
+        ...prev,
+        isPosting: { ...prev.isPosting, [platform]: false },
+        postingError: error instanceof Error ? error.message : `Failed to post to ${platform}`,
+      }));
+    }
   };
 
   const handleStartOver = () => {
@@ -186,6 +314,10 @@ export default function PostGenerationPage() {
       selectedCaptions: [],
       finalVariants: [],
       selectedVariants: [],
+      connections: {},
+      isLoadingConnections: false,
+      isPosting: {},
+      postingError: null,
     });
   };
 
@@ -398,10 +530,46 @@ export default function PostGenerationPage() {
           <CardHeader>
             <CardTitle>Step 6: Preview & Select</CardTitle>
             <CardDescription>
-              Preview your post variants. Select one or more to post to TikTok.
+              Preview your post variants. Select one or more to post to your connected platforms.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Connection Status */}
+            {state.isLoadingConnections ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Checking connected accounts...
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2 text-sm">
+                <span className="text-muted-foreground">Connected platforms:</span>
+                {(['tiktok', 'instagram', 'youtube'] as const).map((platform) => (
+                  <span
+                    key={platform}
+                    className={`px-2 py-1 rounded ${
+                      state.connections[platform]
+                        ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                    }`}
+                  >
+                    {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                    {state.connections[platform] && (
+                      <Check className="w-3 h-3 inline-block ml-1" />
+                    )}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Error Message */}
+            {state.postingError && (
+              <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-sm">{state.postingError}</span>
+              </div>
+            )}
+
+            {/* Variants Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {state.finalVariants.map((variant) => {
                 const isSelected = state.selectedVariants.includes(variant.id);
@@ -433,15 +601,93 @@ export default function PostGenerationPage() {
                 );
               })}
             </div>
-            <div className="flex gap-4">
-              <Button
-                onClick={handlePostToTikTok}
-                disabled={state.selectedVariants.length === 0}
-                className="flex-1"
-              >
-                Post to TikTok ({state.selectedVariants.length} selected)
-              </Button>
-              <Button variant="outline" onClick={handleStartOver}>
+
+            {/* Posting Buttons */}
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  onClick={() => handlePostToPlatform('tiktok')}
+                  disabled={
+                    state.selectedVariants.length === 0 ||
+                    !state.connections.tiktok ||
+                    state.isPosting.tiktok ||
+                    state.isLoadingConnections
+                  }
+                  className="flex-1 min-w-[150px]"
+                  variant={state.connections.tiktok ? 'default' : 'outline'}
+                >
+                  {state.isPosting.tiktok ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Posting...
+                    </>
+                  ) : (
+                    <>
+                      Post to TikTok
+                      {state.selectedVariants.length > 0 && ` (${state.selectedVariants.length})`}
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={() => handlePostToPlatform('instagram')}
+                  disabled={
+                    state.selectedVariants.length === 0 ||
+                    !state.connections.instagram ||
+                    state.isPosting.instagram ||
+                    state.isLoadingConnections
+                  }
+                  className="flex-1 min-w-[150px]"
+                  variant={state.connections.instagram ? 'default' : 'outline'}
+                >
+                  {state.isPosting.instagram ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Posting...
+                    </>
+                  ) : (
+                    <>
+                      Post to Instagram
+                      {state.selectedVariants.length > 0 && ` (${state.selectedVariants.length})`}
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={() => handlePostToPlatform('youtube')}
+                  disabled={
+                    state.selectedVariants.length === 0 ||
+                    !state.connections.youtube ||
+                    state.isPosting.youtube ||
+                    state.isLoadingConnections
+                  }
+                  className="flex-1 min-w-[150px]"
+                  variant={state.connections.youtube ? 'default' : 'outline'}
+                >
+                  {state.isPosting.youtube ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Posting...
+                    </>
+                  ) : (
+                    <>
+                      Post to YouTube
+                      {state.selectedVariants.length > 0 && ` (${state.selectedVariants.length})`}
+                    </>
+                  )}
+                </Button>
+              </div>
+              {(!state.connections.tiktok && !state.connections.instagram && !state.connections.youtube) && (
+                <p className="text-sm text-muted-foreground text-center">
+                  Connect your accounts in{' '}
+                  <a
+                    href="/dashboard/settings/connections"
+                    className="text-primary hover:underline"
+                  >
+                    Settings → Connections
+                  </a>{' '}
+                  to enable posting
+                </p>
+              )}
+              <Button variant="outline" onClick={handleStartOver} className="w-full">
                 Start Over
               </Button>
             </div>
